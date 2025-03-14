@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flame/components.dart' hide Timer;
 import 'package:flame/sprite.dart';
 import 'package:flame/widgets.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/material.dart';
 import 'package:photobooth_ui/photobooth_ui.dart';
 
@@ -85,6 +86,7 @@ class _AnimatedSpriteState extends State<AnimatedSprite> {
   Timer? _timer;
   var _status = _AnimatedSpriteStatus.loading;
   var _isPlaying = false;
+  late final SpriteAnimationTicker _animationTicker;
 
   @override
   void initState() {
@@ -95,6 +97,7 @@ class _AnimatedSpriteState extends State<AnimatedSprite> {
   @override
   void dispose() {
     _timer?.cancel();
+    _animationTicker.dispose();
     super.dispose();
   }
 
@@ -110,6 +113,8 @@ class _AnimatedSpriteState extends State<AnimatedSprite> {
         to: widget.sprites.frames,
         loop: widget.mode == AnimationMode.loop,
       );
+
+      _animationTicker = _animation.createTicker();
 
       setState(() {
         _status = _AnimatedSpriteStatus.loaded;
@@ -137,7 +142,11 @@ class _AnimatedSpriteState extends State<AnimatedSprite> {
           : const SizedBox(),
       secondChild: SizedBox.expand(
         child: _status.isLoaded
-            ? SpriteAnimationWidget(animation: _animation, playing: _isPlaying)
+            ? SpriteAnimationWidget(
+                animation: _animation,
+                playing: _isPlaying,
+                animationTicker: _animationTicker,
+              )
             : const SizedBox(),
       ),
       crossFadeState: _status.isLoaded
